@@ -7,7 +7,6 @@ int main () {
     std::ifstream input("3.in");
     std::string line;
 
-    char** map;
     std::vector<std::string> tab;
 
     while (std::getline(input, line)) {
