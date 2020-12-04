@@ -10,7 +10,7 @@ struct Password {
 
 int main () {
 
-    std::ifstream input("2.in");
+    std::ifstream input("2.txt");
 
     std::vector<Password> tab;
     std::string line;
