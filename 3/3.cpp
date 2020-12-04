@@ -4,7 +4,7 @@
 
 int main () {
 
-    std::ifstream input("3.in");
+    std::ifstream input("3.txt");
     std::string line;
 
     std::vector<std::string> tab;
