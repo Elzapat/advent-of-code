@@ -32,10 +32,7 @@ int main () {
         }
     }
 
-    std::map<std::string, int> startingMap;
-    for (auto [bag1, map2] : map) {
-        if (bag1 == "shiny gold") startingMap = map[bag1]; 
-    }
+    std::map<std::string, int> startingMap = map["shiny gold"];
 
     int size = nbBags(map, startingMap) - 1;
 
