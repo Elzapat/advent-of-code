@@ -32,9 +32,7 @@ int main () {
         }
     }
 
-    std::map<std::string, int> startingMap = map["shiny gold"];
-
-    int size = nbBags(map, startingMap) - 1;
+    int size = nbBags(map, map["shiny gold"]) - 1;
 
     std::cout << size << std::endl;
     return 0;
