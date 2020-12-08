@@ -20,21 +20,16 @@ int main () {
         std::string instr = tab[i].substr(0, 3);
         int nb = std::stoi(tab[i].substr(4, tab[i].size()));
 
+        if (instr == "acc") continue;
+
         std::vector<std::string> testTab;
         for (auto l : tab) testTab.push_back(l);
         int testAcc = 0;
-        if (instr == "jmp") {
-            testTab[i] = "nop " + std::to_string(nb);
-            if (bruteForce(testTab, testAcc)) {
-                std::cout << testAcc << std::endl;
-                break;
-            }
-        } else if (instr == "nop") {
-            testTab[i] = "jmp " + std::to_string(nb);
-            if (bruteForce(testTab, testAcc)) {
-                std::cout << testAcc << std::endl;
-                break;
-            }
+        std::string change = instr == "jmp" ? "nop " : "jmp ";
+        testTab[i] = change + std::to_string(nb);
+        if (bruteForce(testTab, testAcc)) {
+            std::cout << testAcc << std::endl;
+            break;
         }
     }
 
