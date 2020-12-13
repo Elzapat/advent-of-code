@@ -17,11 +17,6 @@ int main () {
     input >> busses_s;
 
     std::vector<std::string> busses = split(busses_s, ","); 
-    std::vector<int> busses_ids;
-    for (auto bus : busses) {
-        if (bus == "x") busses_ids.push_back(-1);
-        else busses_ids.push_back(std::stoi(bus));
-    }
 
     std::vector<long long> n, a;
     for (int i = 0; i < busses.size(); ++i) {
