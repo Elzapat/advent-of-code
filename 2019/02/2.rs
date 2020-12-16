@@ -20,7 +20,6 @@ fn main() {
 
 fn part_1(codes: &mut Vec<i32>) -> i32 {
 
-
     let mut i = 0;
     loop {
         match codes[i] {
@@ -59,7 +58,7 @@ fn part_2(codes: &mut Vec<i32>) -> i32 {
             match part_1(codes) {
                 19690720 => return 100 * i + j,
                 _ => *codes = original_codes.clone(),
-            };
+            }
         }
     }
 
