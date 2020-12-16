@@ -2,7 +2,6 @@
 #include <fstream>
 #include <vector>
 #include <map>
-#include <algorithm>
 #include <unordered_set>
 #include "../split.hpp"
 
@@ -82,31 +81,37 @@ int main() {
     std::map<std::string, int> fields_pos;
     std::unordered_set<int> taken;
 
-    for (auto& [field, positions] : fields_proba) {
-        std::map<int, int> counter;
-        int field_pos = 0;
-        int max = 0;
+    for (int i = 0; i < 20; ++i) {
+        for (auto& [field, positions] : fields_proba) {
+            std::map<int, int> counter;
+            int field_pos = 0;
+            int max = 0;
 
-        for (auto pos : positions)
-            counter[pos]++;
+            for (auto pos : positions) {
+                if (taken.find(pos) != taken.end()) continue;
+                counter[pos]++;
+            }
 
-        for (auto [pos, count] : counter) {
-            if (count > max) {
-                if (taken.find(pos) == taken.end()) {
-                    taken.insert(pos);
-                    field_pos = pos;
-                    max = count;
+            int nb_190 = 0;
+            int taken_index = 0;
+
+            for (auto [index, nb] : counter) {
+                if (nb == 190) {
+                    nb_190++;
+                    taken_index = index;
                 }
             }
-        }
 
-        fields_pos[field] = field_pos;
+            if (nb_190 == 1) {
+                taken.insert(taken_index);
+                fields_pos[field] = taken_index;
+            }
+        }
     }
 
     long product = 1;
 
     for (auto [field, field_pos] : fields_pos) {
-        std::cout << field << " " << field_pos << std::endl;
         if (field.find("departure") != std::string::npos) {
             product *= my_ticket[field_pos];
         }
