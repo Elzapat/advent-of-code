@@ -1,6 +1,5 @@
 #include <iostream>
 #include <fstream>
-#include <vector>
 
 #define SIZE 24
 
@@ -25,17 +24,6 @@ int main() {
     }
 
     for (int cycle = 0; cycle < 6; ++cycle) {
-        /*
-        for (int d = 0; d < SIZE; ++d) {
-            for (int e = 0; e < SIZE; ++e) {
-                for (int f = 0; f < SIZE; ++f) {
-                    std::cout << cubes[d][e][f];
-                }
-                std::cout << std::endl;
-            }
-            std::cout << "-----" << std::endl;
-        }
-        */
         for (int i = 1; i < SIZE - 1; ++i) {
             for (int j = 1; j < SIZE - 1; ++j) {
                 for (int k = 1; k < SIZE - 1; ++k) {
@@ -43,14 +31,8 @@ int main() {
                     for (int a = i - 1; a <= i + 1; ++a) {
                         for (int b = j - 1; b <= j + 1; ++b) {
                             for (int c = k - 1; c <= k + 1; ++c) {
-                                /*
                                 if (a == i && b == j && c == k)
                                     continue;
-                                else if (a < 0 || a >= SIZE ||
-                                         b < 0 || b >= SIZE ||
-                                         c < 0 || c >= SIZE)
-                                    continue;
-                                */
                                 if (cubes[a][b][c]) active++;
                             }
                         }
@@ -82,4 +64,6 @@ int main() {
     }
 
     std::cout << nb_active << std::endl;
+
+    return 0;
 }
