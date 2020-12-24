@@ -35,15 +35,6 @@ int main() {
     }
 
     std::map<tuple_3int, int> hexagons;
-    int size = 18;
-
-    for (int x = -size; x <= size; ++x) {
-        for (int y = -size; y <= size; ++y) {
-            for (int z = -size; z <= size; ++z) {
-                hexagons[std::make_tuple(x, y, z)] = 0;
-            }
-        }
-    }
 
     for (auto tile_instr : tiles_instr) {
         int x = 0, y = 0, z = 0;
@@ -97,9 +88,10 @@ int part_2(std::map<tuple_3int, int> hexagons) {
                         int x2 = std::get<0>(neighbour_pos) + std::get<0>(diff2);
                         int y2 = std::get<1>(neighbour_pos) + std::get<1>(diff2);
                         int z2 = std::get<2>(neighbour_pos) + std::get<2>(diff2);
+                        tuple_3int other_neighbour_pos = std::make_tuple(x2, y2, z2);
 
-                        if (hexagons.find(neighbour_pos) != hexagons.end()) {
-                            if (hexagons[neighbour_pos])
+                        if (hexagons.find(other_neighbour_pos) != hexagons.end()) {
+                            if (hexagons[other_neighbour_pos])
                                 black_tiles++;
                         }
                     }
