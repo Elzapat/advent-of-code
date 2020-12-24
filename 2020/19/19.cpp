@@ -3,12 +3,13 @@
 #include <sstream>
 #include <map>
 #include <vector>
+#include <tuple>
 
-bool is_valid(std::multimap<int, std::vector<std::string>& rules, std::string<std::string>& rule, std::string& message);
+bool is_valid(std::multimap<int, std::vector<std::string>>& rules, int rule_id, int& index_to_check, std::string& message);
 
 int main() {
 
-    std::ifstream input("19ex.txt");
+    std::ifstream input("19_2.txt");
     std::string line;
     std::multimap<int, std::vector<std::string>> rules;
 
@@ -36,26 +37,41 @@ int main() {
         rules.insert(std::make_pair(rule_id, rules_to_match));
     }
 
-    for (auto [id, rules] : rules) {
-        std::cout << id << ": ";
-        for (auto rule : rules) {
-            std::cout << rule << ", ";
-        }
-        std::cout << std::endl;
-    }
-
     int valid = 0;
     while (std::getline(input, line)) {
-        if (is_valid(rules, rules[0], line)) valid++;
+        int index_to_check = 0;
+        if (is_valid(rules, 0, index_to_check, line) && index_to_check == line.size())
+            valid++;
     }
 
-    std::cout << valid << std::cout;
+    std::cout << valid << std::endl;
 
     input.close();
     return 0;
 }
 
-bool is_valid(std::multimap<int, std::vector<std::string>& rules, std::vector<std::string>& rule, std::string& message) {
+bool is_valid(std::multimap<int, std::vector<std::string>>& rules, int rule_id, int& index_to_check, std::string& message) {
 
-    if (rule[0].find())
+    if (index_to_check >= message.size()) return true;
+
+    if (rules.find(rule_id)->second[0].find('"') != std::string::npos) {
+        char letter = rules.find(rule_id)->second[0][1];
+        if (message[index_to_check++] == letter) return true;
+        else return false;
+    }
+
+    int remember_this_index = index_to_check;
+    auto range = rules.equal_range(rule_id); 
+    bool valid;
+    for (auto it = range.first; it != range.second; ++it) {
+        valid = true;
+        for (auto rule_to_follow : it->second) {
+            if (std::stoi(rule_to_follow) == rule_id); 
+            valid = valid && is_valid(rules, std::stoi(rule_to_follow), index_to_check, message);
+        }
+        if (valid) break;
+        index_to_check = remember_this_index;
+    }
+
+    return valid;
 }
