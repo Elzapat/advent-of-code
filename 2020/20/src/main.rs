@@ -72,7 +72,7 @@ impl Tile {
         self
             .image
             .iter()
-            .map(|line| line.chars().nth(0).unwrap())
+            .map(|line| line.chars().last().unwrap())
             .collect::<String>()
     }
 }
@@ -92,31 +92,32 @@ fn main() {
 }
 
 fn search(grid_size: usize, row: usize, col: usize, tiles: &Vec<Tile>, visited_tiles: &mut HashSet<Id>, grid: &mut Vec<Vec<Tile>>) {
-    if row == grid_size {
+    if row == grid_size - 1 {
         println!("Part 1: {}", grid[0][0].id * grid[grid_size - 1][0].id * grid[0][grid_size - 1].id * grid[grid_size - 1][grid_size - 1].id);
         std::process::exit(0);
     }
 
     for tile in tiles {
-        println!("{}:{}", row, col);
-        if row > 0 && tiles[grid_size * col + (row - 1)].down_side() != tile.up_side() {
-            continue;
+        if !visited_tiles.contains(&tile.id) {
+            if row > 0 && tiles[grid_size * (row - 1) + col].down_side() != tile.up_side() {
+                continue;
+            }
+
+            if col > 0 && tiles[grid_size * row + (col - 1)].right_side() != tile.left_side() {
+                continue;
+            }
+
+            grid[row][col] = tile.clone();
+            visited_tiles.insert(tile.id);
+
+            if col == grid_size - 1 {
+                search(grid_size, row + 1, 0, tiles, visited_tiles, grid);
+            } else {
+                search(grid_size, row, col + 1, tiles, visited_tiles, grid);
+            }
+
+            visited_tiles.remove(&tile.id);
         }
-
-        if col > 0 && tiles[grid_size * (col - 1) + row].right_side() != tile.left_side() {
-            continue;
-        }
-
-        grid[row][col] = tile.clone();
-        visited_tiles.insert(tile.id);
-
-        if col == grid_size - 1 {
-            search(grid_size, row + 1, 0, tiles, visited_tiles, grid);
-        } else {
-            search(grid_size, row, col + 1, tiles, visited_tiles, grid);
-        }
-
-        visited_tiles.remove(&tile.id);
     }
 }
 
