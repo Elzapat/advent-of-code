@@ -1,5 +1,5 @@
 fn main() {
-    let input: Vec<i32> = std::fs::read_to_string("input.txt")
+    let input: Vec<i32> = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/input.txt"))
         .unwrap()
         .lines()
         .map(|x| x.parse::<i32>().unwrap())
