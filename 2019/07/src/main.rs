@@ -3,7 +3,7 @@ use std::io;
 use std::io::Write;
 
 fn main() {
-    let mut intcode = fs::read_to_string("input.txt").expect("Reading file error");
+    let mut intcode = fs::read_to_string("input.ex3.txt").expect("Reading file error");
     intcode.pop();
 
     let mut codes = vec![];
@@ -35,11 +35,11 @@ fn main() {
                                 continue;
                             }
 
-                            output = decode(&mut codes.clone(), vec![i, output]);
-                            output = decode(&mut codes.clone(), vec![j, output]);
-                            output = decode(&mut codes.clone(), vec![k, output]);
-                            output = decode(&mut codes.clone(), vec![l, output]);
-                            output = decode(&mut codes.clone(), vec![m, output]);
+                            output = decode(&mut codes.clone(), vec![i, output]).0;
+                            output = decode(&mut codes.clone(), vec![j, output]).0;
+                            output = decode(&mut codes.clone(), vec![k, output]).0;
+                            output = decode(&mut codes.clone(), vec![l, output]).0;
+                            output = decode(&mut codes.clone(), vec![m, output]).0;
                             if output > max_output {
                                 max_output = output;
                             }
@@ -52,7 +52,7 @@ fn main() {
 
         println!("Part 1: {}", max_output);
     }
-    
+
     {
         let mut output = 0;
         let mut max_output = 0;
@@ -66,7 +66,6 @@ fn main() {
                                 continue;
                             }
 
-                            output = 0;
                             let mut a_mem = codes.clone();
                             let mut b_mem = codes.clone();
                             let mut c_mem = codes.clone();
@@ -74,32 +73,38 @@ fn main() {
                             let mut e_mem = codes.clone();
 
                             loop {
-                                output = decode(&mut a_mem, vec![i, output]);
-                                output = decode(&mut b_mem, vec![i, output]);
-                                output = decode(&mut c_mem, vec![i, output]);
-                                output = decode(&mut d_mem, vec![i, output]);
-                                output = decode(&mut e_mem, vec![i, output]);
-                                println!("test");
+                                // output = decode(&mut a_mem, vec![i, output]).0;
+                                // output = decode(&mut b_mem, vec![j, output]).0;
+                                // output = decode(&mut c_mem, vec![k, output]).0;
+                                // output = decode(&mut d_mem, vec![l, output]).0;
+                                let (out, halted) = decode(&mut a_mem, vec![i, output]);
+                                println!("a{},{}", out, halted);
+                                let (out, halted) = decode(&mut b_mem, vec![j, out]);
+                                println!("b{},{}", out, halted);
+                                let (out, halted) = decode(&mut c_mem, vec![k, out]);
+                                println!("c{},{}", out, halted);
+                                let (out, halted) = decode(&mut d_mem, vec![l, out]);
+                                println!("d{},{}", out, halted);
+                                let (out, halted) = decode(&mut e_mem, vec![m, out]);
+                                output = out;
+                                if halted {
+                                    break;
+                                }
+                                println!("{},{}", out, halted);
                             }
-
-                            output = decode(&mut codes.clone(), vec![i, output]);
-
-                                // output = decode(&mut codes.clone(), vec![i, output]);
-                                // output = decode(&mut codes.clone(), vec![j, output]);
-                                // output = decode(&mut codes.clone(), vec![k, output]);
-                                // output = decode(&mut codes.clone(), vec![l, output]);
-                                // output = decode(&mut codes.clone(), vec![m, output]);
 
                             if output > max_output {
                                 max_output = output;
                             }
+
+                            output = 0;
                         }
                     }
                 }
             }
         }
 
-        println!("Part 1: {}", max_output);
+        println!("Part 2: {}", max_output);
     }
 }
 
@@ -118,7 +123,7 @@ fn get_parameters(codes: &Vec<i32>, parameters_modes: &[u32; 3], instr_pointer: 
     parameters
 }
 
-fn decode(codes: &mut Vec<i32>, mut inputs: Vec<i32>) -> i32 {
+fn decode(codes: &mut Vec<i32>, mut inputs: Vec<i32>) -> (i32, bool) {
     let mut i = 0;
     let mut last_output = 0;
 
@@ -154,6 +159,7 @@ fn decode(codes: &mut Vec<i32>, mut inputs: Vec<i32>) -> i32 {
                 let write_pos = codes[i + 1] as usize;
 
                 if inputs.is_empty() {
+                    return (last_output, false);
                     let mut buffer = String::new();
 
                     print!("Input vector is empty, waiting for input > ");
@@ -207,5 +213,5 @@ fn decode(codes: &mut Vec<i32>, mut inputs: Vec<i32>) -> i32 {
         }
     }
 
-    last_output
+    (last_output, true)
 }
