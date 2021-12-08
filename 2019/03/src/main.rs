@@ -8,7 +8,7 @@ struct Instr {
 
 fn main() {
 
-    let wires_s = fs::read_to_string("3.txt").expect("Error while reading file!");
+    let wires_s = fs::read_to_string("input.txt").expect("Error while reading file!");
 
     let mut first_wire = vec![];
     let mut second_wire = vec![];

@@ -4,7 +4,7 @@ use std::io::Write;
 
 fn main() {
 
-    let mut intcode = fs::read_to_string("5.txt").expect("Reading file error");
+    let mut intcode = fs::read_to_string("input.txt").expect("Reading file error");
     intcode.pop();
 
     let mut codes = vec![];

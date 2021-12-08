@@ -1,6 +1,5 @@
 use std::fs;
-use std::io;
-use std::io::Write;
+use intcode_computer::IntcodeComputer;
 
 fn main() {
     let mut intcode = fs::read_to_string("input.ex3.txt").expect("Reading file error");
@@ -35,14 +34,16 @@ fn main() {
                                 continue;
                             }
 
-                            output = decode(&mut codes.clone(), vec![i, output]).0;
-                            output = decode(&mut codes.clone(), vec![j, output]).0;
-                            output = decode(&mut codes.clone(), vec![k, output]).0;
-                            output = decode(&mut codes.clone(), vec![l, output]).0;
-                            output = decode(&mut codes.clone(), vec![m, output]).0;
+                            output = IntcodeComputer::new(codes.clone(), vec![i, output]).outputs.pop().unwrap();
+                            output = IntcodeComputer::new(codes.clone(), vec![j, output]).outputs.pop().unwrap();
+                            output = IntcodeComputer::new(codes.clone(), vec![k, output]).outputs.pop().unwrap();
+                            output = IntcodeComputer::new(codes.clone(), vec![l, output]).outputs.pop().unwrap();
+                            output = IntcodeComputer::new(codes.clone(), vec![m, output]).outputs.pop().unwrap();
+
                             if output > max_output {
                                 max_output = output;
                             }
+
                             output = 0;
                         }
                     }
@@ -66,17 +67,16 @@ fn main() {
                                 continue;
                             }
 
-                            let mut a_mem = codes.clone();
-                            let mut b_mem = codes.clone();
-                            let mut c_mem = codes.clone();
-                            let mut d_mem = codes.clone();
-                            let mut e_mem = codes.clone();
+                            let amps = [IntcodeComputer {
+                                program: codes.clone(),
+                                instr_ptr: 0,
+                                inputs: vec![],
+                                outputs: vec![],
+                                return_on_empty_input: true,
+                                has_halted: false,
+                            }; 5];
 
                             loop {
-                                // output = decode(&mut a_mem, vec![i, output]).0;
-                                // output = decode(&mut b_mem, vec![j, output]).0;
-                                // output = decode(&mut c_mem, vec![k, output]).0;
-                                // output = decode(&mut d_mem, vec![l, output]).0;
                                 let (out, halted) = decode(&mut a_mem, vec![i, output]);
                                 println!("a{},{}", out, halted);
                                 let (out, halted) = decode(&mut b_mem, vec![j, out]);
@@ -121,97 +121,4 @@ fn get_parameters(codes: &Vec<i32>, parameters_modes: &[u32; 3], instr_pointer: 
     parameters[2] = codes[instr_pointer + 3];
 
     parameters
-}
-
-fn decode(codes: &mut Vec<i32>, mut inputs: Vec<i32>) -> (i32, bool) {
-    let mut i = 0;
-    let mut last_output = 0;
-
-    loop {
-        let mut instr = codes[i].to_string();
-        while instr.len() < 5 {
-            instr.insert(0, '0');
-        }
-
-        let opcode: u32 = instr[3..5].parse().unwrap();
-        let mut parameters_modes: [u32; 3] = [0; 3];
-
-        for j in 0..3 {
-            parameters_modes[j] = instr.chars().nth(j).unwrap().to_digit(10).unwrap();
-        }
-
-        //println!("opcode: {}, instr: {}, i: {}", opcode, instr, i);
-        match opcode {
-            1 | 2 => {
-                let operands: [i32; 3] = get_parameters(&codes, &parameters_modes, &i);
-
-                let write_pos = codes[i + 3] as usize;
-
-                if opcode == 1 {
-                    codes[write_pos] = operands[0] + operands[1];
-                } else {
-                    codes[write_pos] = operands[0] * operands[1];
-                }
-
-                i += 4;
-            },
-            3 => {
-                let write_pos = codes[i + 1] as usize;
-
-                if inputs.is_empty() {
-                    return (last_output, false);
-                    let mut buffer = String::new();
-
-                    print!("Input vector is empty, waiting for input > ");
-                    io::stdout().flush().unwrap();
-
-                    io::stdin().read_line(&mut buffer)
-                        .expect("Problem reading input!");
-
-                    let input = buffer.trim().parse::<i32>().unwrap();
-
-                    codes[write_pos] = input;
-                } else {
-                    codes[write_pos] = inputs.remove(0);
-                }
-
-                i += 2;
-            },
-            4 => {
-                let output_pos = codes[i + 1] as usize;
-                last_output = codes[output_pos];
-                //println!("Program output > {}", codes[output_pos]);
-
-                i += 2;
-            },
-            5 | 6 => {
-                let parameters: [i32; 3] = get_parameters(&codes, &parameters_modes, &i);
-
-                if opcode == 5 && parameters[0] != 0 {
-                    i = parameters[1] as usize;
-                } else if opcode == 6 && parameters[0] == 0 {
-                    i = parameters[1] as usize;
-                } else {
-                    i += 3;
-                }
-            },
-            7 | 8 => {
-                let parameters: [i32; 3] = get_parameters(&codes, &parameters_modes, &i);
-
-                if opcode == 7 && parameters[0] < parameters[1] {
-                    codes[parameters[2] as usize] = 1;
-                } else if opcode == 8 && parameters[0] == parameters[1] {
-                    codes[parameters[2] as usize] = 1;
-                } else {
-                    codes[parameters[2] as usize] = 0;
-                }
-
-                i += 4;
-            },
-            99 => break,
-            _ => panic!("Unexpected opcode: {}", opcode),
-        }
-    }
-
-    (last_output, true)
 }

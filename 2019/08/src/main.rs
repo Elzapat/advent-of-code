@@ -3,7 +3,7 @@ use std::collections::HashMap;
 
 fn main() {
 
-    let input = fs::read_to_string("8.txt").unwrap().trim().to_string();
+    let input = fs::read_to_string("input.txt").unwrap().trim().to_string();
 
     const WIDTH: usize = 25;
     const HEIGHT: usize = 6;

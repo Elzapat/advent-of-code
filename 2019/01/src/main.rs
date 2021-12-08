@@ -4,7 +4,7 @@ use std::io::BufReader;
 
 fn main() {
 
-    let file = File::open("1.txt").unwrap();
+    let file = File::open("input.txt").unwrap();
     let lines = BufReader::new(file).lines();
 
     let mut input = vec![];

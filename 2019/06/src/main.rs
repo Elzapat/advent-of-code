@@ -5,7 +5,7 @@ use std::collections::HashMap;
 
 fn main() {
 
-    let file = File::open("6.txt").unwrap();
+    let file = File::open("input.txt").unwrap();
     let lines = BufReader::new(file).lines();
 
     let mut planets_and_orbits: HashMap<String, String> = HashMap::new();

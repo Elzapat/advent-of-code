@@ -2,7 +2,7 @@ use std::fs;
 
 fn main() {
 
-    let mut intcode = fs::read_to_string("2.txt").expect("Reading file error");
+    let mut intcode = fs::read_to_string("input.txt").expect("Reading file error");
     intcode.pop();
 
     let mut codes = vec![];
