@@ -2,7 +2,7 @@ use std::fs;
 use intcode_computer::IntcodeComputer;
 
 fn main() {
-    let mut intcode = fs::read_to_string("input.ex3.txt").expect("Reading file error");
+    let mut intcode = fs::read_to_string("input.txt").expect("Reading file error");
     intcode.pop();
 
     let mut codes = vec![];
@@ -22,7 +22,6 @@ fn main() {
     }
 
     {
-        let mut output = 0;
         let mut max_output = 0;
 
         for i in 0..=4 {
@@ -34,17 +33,18 @@ fn main() {
                                 continue;
                             }
 
-                            output = IntcodeComputer::new(codes.clone(), vec![i, output]).outputs.pop().unwrap();
-                            output = IntcodeComputer::new(codes.clone(), vec![j, output]).outputs.pop().unwrap();
-                            output = IntcodeComputer::new(codes.clone(), vec![k, output]).outputs.pop().unwrap();
-                            output = IntcodeComputer::new(codes.clone(), vec![l, output]).outputs.pop().unwrap();
-                            output = IntcodeComputer::new(codes.clone(), vec![m, output]).outputs.pop().unwrap();
+                            let phase_setting_sequence = [i, j, k, l, m];
+                            let mut output = 0;
+
+                            for x in 0..5 {
+                                let mut computer = IntcodeComputer::new(codes.clone(), vec![phase_setting_sequence[x], output]);
+                                computer.run();
+                                output = computer.outputs.pop().unwrap();
+                            }
 
                             if output > max_output {
                                 max_output = output;
                             }
-
-                            output = 0;
                         }
                     }
                 }
@@ -55,7 +55,6 @@ fn main() {
     }
 
     {
-        let mut output = 0;
         let mut max_output = 0;
 
         for i in 5..=9 {
@@ -67,37 +66,36 @@ fn main() {
                                 continue;
                             }
 
-                            let amps = [IntcodeComputer {
-                                program: codes.clone(),
-                                instr_ptr: 0,
-                                inputs: vec![],
-                                outputs: vec![],
-                                return_on_empty_input: true,
-                                has_halted: false,
-                            }; 5];
+                            let phase_setting_sequence = [i, j, k, l, m];
+                            let mut output = 0;
+                            let mut amps = vec![];
+                            for x in 0..5 {
+                                amps.push(IntcodeComputer {
+                                    program: codes.clone(),
+                                    instr_ptr: 0,
+                                    inputs: vec![phase_setting_sequence[x]],
+                                    outputs: vec![],
+                                    return_on_empty_input: true,
+                                    has_halted: false,
+                                });
+                            }
 
                             loop {
-                                let (out, halted) = decode(&mut a_mem, vec![i, output]);
-                                println!("a{},{}", out, halted);
-                                let (out, halted) = decode(&mut b_mem, vec![j, out]);
-                                println!("b{},{}", out, halted);
-                                let (out, halted) = decode(&mut c_mem, vec![k, out]);
-                                println!("c{},{}", out, halted);
-                                let (out, halted) = decode(&mut d_mem, vec![l, out]);
-                                println!("d{},{}", out, halted);
-                                let (out, halted) = decode(&mut e_mem, vec![m, out]);
-                                output = out;
-                                if halted {
+                                for x in 0..amps.len() {
+                                    amps[x].inputs.push(output);
+                                    amps[x].run();
+
+                                    output = amps[x].outputs.pop().unwrap();
+                                }
+
+                                if amps[4].has_halted {
                                     break;
                                 }
-                                println!("{},{}", out, halted);
                             }
 
                             if output > max_output {
                                 max_output = output;
                             }
-
-                            output = 0;
                         }
                     }
                 }
@@ -106,19 +104,4 @@ fn main() {
 
         println!("Part 2: {}", max_output);
     }
-}
-
-fn get_parameters(codes: &Vec<i32>, parameters_modes: &[u32; 3], instr_pointer: &usize) -> [i32; 3] {
-    let mut parameters: [i32; 3] = [0; 3];
-    for j in 0..2 {
-        if parameters_modes[2 - j] == 1 {
-            parameters[j] = codes[instr_pointer + j + 1] as i32;
-        } else {
-            let address = codes[instr_pointer + j + 1] as usize;
-            parameters[j] = codes[address] as i32;
-        }
-    }
-    parameters[2] = codes[instr_pointer + 3];
-
-    parameters
 }

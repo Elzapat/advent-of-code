@@ -15,6 +15,7 @@ fn get_parameters(codes: &Vec<i32>, parameters_modes: &[u32; 3], instr_pointer: 
     parameters
 }
 
+#[derive(Debug, Clone)]
 pub struct IntcodeComputer {
     pub program: Vec<i32>,
     pub instr_ptr: usize,
@@ -50,7 +51,6 @@ impl IntcodeComputer {
                 parameters_modes[j] = instr.chars().nth(j).unwrap().to_digit(10).unwrap();
             }
 
-            //println!("opcode: {}, instr: {}, i: {}", opcode, instr, i);
             match opcode {
                 1 | 2 => {
                     let operands: [i32; 3] = get_parameters(&self.program, &parameters_modes, &self.instr_ptr);
@@ -91,7 +91,6 @@ impl IntcodeComputer {
                 4 => {
                     let output_pos = self.program[self.instr_ptr + 1] as usize;
                     self.outputs.push(self.program[output_pos]);
-                    //println!("Program output > {}", self.program[output_pos]);
 
                     self.instr_ptr += 2;
                 },
@@ -119,7 +118,10 @@ impl IntcodeComputer {
 
                     self.instr_ptr += 4;
                 },
-                99 => break,
+                99 => {
+                    self.has_halted = true;
+                    break;
+                },
                 _ => panic!("Unexpected opcode: {}", opcode),
             }
         }
