@@ -1,41 +1,76 @@
 use std::io::{ self, Write };
 
-fn get_parameters(codes: &Vec<i32>, parameters_modes: &[u32; 3], instr_pointer: &usize) -> [i32; 3] {
-    let mut parameters: [i32; 3] = [0; 3];
-    for j in 0..2 {
-        if parameters_modes[2 - j] == 1 {
-            parameters[j] = codes[instr_pointer + j + 1] as i32;
-        } else {
-            let address = codes[instr_pointer + j + 1] as usize;
-            parameters[j] = codes[address] as i32;
-        }
-    }
-    parameters[2] = codes[instr_pointer + 3];
-
-    parameters
-}
-
 #[derive(Debug, Clone)]
 pub struct IntcodeComputer {
-    pub program: Vec<i32>,
+    pub program: Vec<i64>,
     pub instr_ptr: usize,
-    pub inputs: Vec<i32>,
-    pub outputs: Vec<i32>,
+    pub relative_base: isize,
+    pub inputs: Vec<i64>,
+    pub outputs: Vec<i64>,
     pub return_on_empty_input: bool,
     pub has_halted: bool,
 }
 
 impl IntcodeComputer {
-    pub fn new(program: Vec<i32>, inputs: Vec<i32>) -> Self {
+    pub fn new(mut program: Vec<i64>, inputs: Vec<i64>) -> Self {
+        program.append(&mut vec![0; 1024]);
         Self {
             program,
             instr_ptr: 0,
+            relative_base: 0,
             inputs,
             outputs: vec![],
             return_on_empty_input: false,
             has_halted: false,
         }
     }
+
+    fn get_parameters(&self, opcode: u32, parameters_modes: &[u32; 3]) -> [i64; 3] {
+        let mut parameters: [i64; 3] = [0; 3];
+        let number_params = match opcode {
+            9 => 1,
+            5 | 6  => 2,
+            1 | 2 | 3 | 4 | 7 | 8 => 3,
+            _ => panic!("Unexpected opcode: {}", opcode),
+        };
+
+        for j in 0..number_params {
+            // println!("j = {}, {:?}", j, parameters_modes);
+            match parameters_modes[2 - j] {
+                // Position mode
+                0 => {
+                    let address = self.program[self.instr_ptr + j + 1];
+
+                    if j == 2 {
+                        parameters[j] = address as i64;
+                    } else if (opcode == 3 || opcode == 4) && j == 0 {
+                        parameters[j] = address as i64;
+                    } else {
+                        parameters[j] = self.program[address as usize];
+                    }
+                },
+                // Immediate mode
+                1 => parameters[j] = self.program[self.instr_ptr + j + 1],
+                // Relative mode
+                2 => {
+                    let parameter = self.program[self.instr_ptr + j + 1];
+                    let address = (self.relative_base + parameter as isize) as usize;
+
+                    if j == 2 {
+                        parameters[j] = address as i64;
+                    } else if (opcode == 3 || opcode == 4) && j == 0 {
+                        parameters[j] = address as i64;
+                    } else {
+                        parameters[j] = self.program[address as usize];
+                    }
+                },
+                _ => panic!("Unexpected parameter mode: {}", parameters_modes[2 - j]),
+            }
+        }
+
+        parameters
+    }
+
 
     pub fn run(&mut self) {
         loop {
@@ -50,23 +85,34 @@ impl IntcodeComputer {
             for j in 0..3 {
                 parameters_modes[j] = instr.chars().nth(j).unwrap().to_digit(10).unwrap();
             }
+            // println!("opcode = {}, parameter_modes = {:?}", opcode, parameters_modes);
 
             match opcode {
                 1 | 2 => {
-                    let operands: [i32; 3] = get_parameters(&self.program, &parameters_modes, &self.instr_ptr);
+                    let params: [i64; 3] = self.get_parameters(opcode, &parameters_modes);
+                    println!("{:?}", params);
 
-                    let write_pos = self.program[self.instr_ptr + 3] as usize;
+                    // let write_pos = self.program[self.instr_ptr + 3] as usize;
+                    let write_pos = params[2] as usize;
 
                     if opcode == 1 {
-                        self.program[write_pos] = operands[0] + operands[1];
+                        println!("modes = {:?}, params = {:?}", parameters_modes, params);
+                        println!("ptr = {}, {} + {} = {} at address {}", self.instr_ptr, params[0], params[1], params[0] + params[1], params[2]);
+                        self.program[write_pos] = params[0] + params[1];
                     } else {
-                        self.program[write_pos] = operands[0] * operands[1];
+                        self.program[write_pos] = params[0] * params[1];
                     }
 
                     self.instr_ptr += 4;
                 },
                 3 => {
-                    let write_pos = self.program[self.instr_ptr + 1] as usize;
+                    // let write_pos = self.program[self.instr_ptr + 1] as usize;
+                    let params = self.get_parameters(opcode, &parameters_modes);
+                    // let write_pos = params[0] as usize;
+                    let write_pos = params[0] as usize;
+                    let parameter = self.program[self.instr_ptr + 1];
+                    let address = (self.relative_base + parameter as isize) as usize;
+                    let write_pos = address;
 
                     if self.inputs.is_empty() && self.return_on_empty_input {
                         return;
@@ -79,7 +125,7 @@ impl IntcodeComputer {
                         io::stdin().read_line(&mut buffer)
                             .expect("Problem reading input!");
 
-                        let input = buffer.trim().parse::<i32>().unwrap();
+                        let input = buffer.trim().parse::<i64>().unwrap();
 
                         self.program[write_pos] = input;
                     } else {
@@ -89,13 +135,13 @@ impl IntcodeComputer {
                     self.instr_ptr += 2;
                 },
                 4 => {
-                    let output_pos = self.program[self.instr_ptr + 1] as usize;
-                    self.outputs.push(self.program[output_pos]);
+                    let output_pos = self.get_parameters(opcode, &parameters_modes)[0];
+                    self.outputs.push(output_pos);
 
                     self.instr_ptr += 2;
                 },
                 5 | 6 => {
-                    let parameters: [i32; 3] = get_parameters(&self.program, &parameters_modes, &self.instr_ptr);
+                    let parameters: [i64; 3] = self.get_parameters(opcode, &parameters_modes);
 
                     if opcode == 5 && parameters[0] != 0 {
                         self.instr_ptr = parameters[1] as usize;
@@ -106,7 +152,7 @@ impl IntcodeComputer {
                     }
                 },
                 7 | 8 => {
-                    let parameters: [i32; 3] = get_parameters(&self.program, &parameters_modes, &self.instr_ptr);
+                    let parameters: [i64; 3] = self.get_parameters(opcode, &parameters_modes);
 
                     if opcode == 7 && parameters[0] < parameters[1] {
                         self.program[parameters[2] as usize] = 1;
@@ -118,6 +164,12 @@ impl IntcodeComputer {
 
                     self.instr_ptr += 4;
                 },
+                9 => {
+                    let parameters = self.get_parameters(opcode, &parameters_modes);
+                    self.relative_base += parameters[0] as isize;
+
+                    self.instr_ptr += 2;
+                }
                 99 => {
                     self.has_halted = true;
                     break;

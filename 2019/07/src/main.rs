@@ -8,7 +8,7 @@ fn main() {
     let mut codes = vec![];
 
     for code in intcode.split(',') {
-        codes.push(code.parse::<i32>().unwrap());
+        codes.push(code.parse::<i64>().unwrap());
     }
 
     // https://stackoverflow.com/questions/46766560/how-to-check-if-there-are-duplicates-in-a-slice
@@ -73,6 +73,7 @@ fn main() {
                                 amps.push(IntcodeComputer {
                                     program: codes.clone(),
                                     instr_ptr: 0,
+                                    relative_base: 0,
                                     inputs: vec![phase_setting_sequence[x]],
                                     outputs: vec![],
                                     return_on_empty_input: true,

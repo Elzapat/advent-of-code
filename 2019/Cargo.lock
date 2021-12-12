@@ -104,6 +104,9 @@ version = "0.1.0"
 [[package]]
 name = "day9"
 version = "0.1.0"
+dependencies = [
+ "intcode_computer",
+]
 
 [[package]]
 name = "intcode_computer"
