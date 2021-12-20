@@ -1,43 +1,20 @@
 use regex::Regex;
-use std::{
-    ops::Sub,
-    collections::HashSet,
+use std::collections::HashMap;
+use nalgebra::{
+    base::Vector3,
+    geometry::{ Point3, Rotation3 },
 };
 
-#[derive(Default, Hash, Debug, Copy, Clone, PartialEq, Eq)]
-struct Pos {
-    x: i32,
-    y: i32,
-    z: i32,
-}
-
-impl Sub for Pos {
-    type Output = Self;
-
-    fn sub(self, other: Self) -> Self::Output {
-        Self {
-            x: self.x - other.x,
-            y: self.y - other.y,
-            z: self.z - other.z,
-        }
-    }
-}
-
-impl Pos {
-    fn diff_abs(self, other: &Self) -> Self {
-        Self {
-            x: (self.x - other.x).abs(),
-            y: (self.y - other.y).abs(),
-            z: (self.z - other.z).abs(),
-        }
-    }
+#[derive(Debug, Clone)]
+struct Beacon {
+    pos: Point3<i32>,
+    all_pos: Vec<Point3<i32>>,
 }
 
 #[derive(Default, Debug, Clone)]
 struct Scanner {
     id: usize,
-    beacons: Vec<Pos>,
-    beacons_all_pos: Vec<Pos>,
+    beacons: Vec<Beacon>,
 }
 
 fn main() {
@@ -57,94 +34,101 @@ fn main() {
 
         while let Some(line) = lines.next() {
             if line.is_empty() {
-                for pos in &cur_scanner.beacons {
-                    let mut pos = pos.clone();
+                for beacon in cur_scanner.beacons.iter_mut() {
+                    for (i, axis) in [&Vector3::x_axis(), &Vector3::y_axis(), &Vector3::z_axis()].iter().enumerate() {
+                        for _ in 0..2 {
+                            for j in 0..4 {
+                                let rot = Rotation3::from_axis_angle(axis, j as f32 * std::f32::consts::FRAC_PI_2);
+                                let pt = Point3::new(beacon.pos.x as f32, beacon.pos.y as f32, beacon.pos.z as f32);
+                                let new_pt = rot.transform_point(&pt);
+                                beacon.all_pos.push(Point3::new(new_pt.x.round() as i32, new_pt.y.round() as i32, new_pt.z.round() as i32));
+                            }
 
-                    for _ in 0..2 {
-                        // Rotations around x axis
-                        for _ in 0..4 {
-                            pos.y = -1 * pos.z;
-                            pos.z = 1 * pos.y;
-                            cur_scanner.beacons_all_pos.push(pos);
+                            match i {
+                                0 => beacon.pos.x *= -1,
+                                1 => beacon.pos.y *= -1,
+                                _ => beacon.pos.z *= -1,
+                            }
                         }
-
-                        // Rotations around y axis
-                        for _ in 0..4 {
-                            pos.x = 1 * pos.z;
-                            pos.z = -1 * pos.x;
-                            cur_scanner.beacons_all_pos.push(pos);
-                        }
-
-                        // Rotations around z axis
-                        for _ in 0..4 {
-                            pos.x = -1 * pos.y;
-                            pos.y = 1 * pos.x;
-                            cur_scanner.beacons_all_pos.push(pos);
-                        }
-
-                        pos.x *= -1;
-                        pos.y *= -1;
-                        pos.z *= -1;
                     }
                 }
 
                 scanners.push(cur_scanner);
-                cur_scanner = Scanner::default();
-
                 break;
             }
 
             let mut pos = line.split(",");
-            cur_scanner.beacons.push(Pos {
-                x: pos.next().unwrap().parse::<i32>().unwrap(),
-                y: pos.next().unwrap().parse::<i32>().unwrap(),
-                z: pos.next().unwrap().parse::<i32>().unwrap(),
+            cur_scanner.beacons.push(Beacon {
+                pos: Point3::new(
+                    pos.next().unwrap().parse::<i32>().unwrap(),
+                    pos.next().unwrap().parse::<i32>().unwrap(),
+                    pos.next().unwrap().parse::<i32>().unwrap(),
+                ),
+                all_pos: vec![],
             });
         }
     }
+    /*
     for scanner in &scanners {
-        // println!("{}", scanner.id);
-        if scanner.id == 0 {
-            println!("{:?}", scanner.beacons);
+        for beacon in &scanner.beacons {
+            for pos in &beacon.all_pos {
+                println!("{:?}", pos);
+            }
         }
     }
+    */
 
     {
         let scanners = scanners.clone();
-        let scanner_pos = vec![Pos::default(); scanners.len()];
+        let scanner_pos = vec![Point3::<f32>::new(0.0, 0.0, 0.0); scanners.len()];
 
-        for scanner1 in &scanners {
-            for scanner2 in &scanners {
+        for mut scanner1 in &scanners {
+            for mut scanner2 in &scanners {
+                scanner1 = &scanners[1];
+                scanner2 = &scanners[4];
                 if scanner1.id == scanner2.id {
                     continue;
                 }
 
-                let mut scanner1_differences = HashSet::new();
-                for pos1 in &scanner1.beacons {
-                    for pos2 in &scanner1.beacons {
-                        if pos1 == pos2 {
-                            continue;
-                        }
+                let mut scanner1_differences = HashMap::new();
+                for b1 in &scanner1.beacons {
+                    for b2 in &scanner2.beacons {
+                        for p in &b2.all_pos {
+                            if *p == b1.pos {
+                                continue;
+                            }
 
-                        scanner1_differences.insert(pos1.diff_abs(pos2));
+                            let diff = b1.pos - *p;
+                            // let diff = Point3::new(diff.x.abs(), diff.y.abs(), diff.z.abs());
+                            match scanner1_differences.get_mut(&diff) {
+                                Some(count) => *count += 1,
+                                None => drop(scanner1_differences.insert(diff, 1)),
+                            };
+                        }
                     }
                 }
 
-                let mut scanner2_differences = HashSet::new();
-                for pos1 in &scanner2.beacons {
-                    for pos2 in &scanner2.beacons {
-                        if pos1 == pos2 {
-                            continue;
+                /*
+                if scanner1.id == 0 && scanner2.id == 4 || scanner2.id == 0 && scanner1.id == 4 {
+                    println!("{:?}", "hello");
+                    for (p, val) in &scanner1_differences {
+                        if *val > 3 {
+                            println!("{:?} ---- {}", p, val);
                         }
-
-                        scanner2_differences.insert(pos1.diff_abs(pos2));
                     }
+                    // println!("{:?}", scanner1_differences);
                 }
+                */
 
-                let intersection: HashSet<&Pos> = scanner1_differences.intersection(&scanner2_differences).collect();
-                println!("intersection between {} and {}: {}", scanner1.id, scanner2.id, intersection.len());
-                if intersection.len() >= 12 {
-                    println!("SHOULD WORK BETWEEN {} and {}", scanner1.id, scanner2.id);
+                if let Some(max) = scanner1_differences.iter().map(|(_, val)| val).max() {
+                    if *max >= 12 {
+                        println!("intersection between {} and {}: {}", scanner1.id, scanner2.id, max);
+                        for (p, val) in &scanner1_differences {
+                            if *val >= 12 {
+                                println!("{:?}", p);
+                            }
+                        }
+                    }
                 }
             }
         }
