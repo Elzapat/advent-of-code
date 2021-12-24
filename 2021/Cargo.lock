@@ -122,7 +122,6 @@ name = "day19"
 version = "0.1.0"
 dependencies = [
  "array_tool",
- "itertools",
  "nalgebra",
  "num-integer",
  "regex",

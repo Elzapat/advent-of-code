@@ -8,3 +8,5 @@ edition = "2018"
 [dependencies]
 regex = "1.5"
 nalgebra = "0.29"
+num-integer = "0.1"
+array_tool = "1.0"

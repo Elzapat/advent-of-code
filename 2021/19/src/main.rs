@@ -1,14 +1,17 @@
 use regex::Regex;
-use std::collections::HashMap;
-use nalgebra::{
-    base::Vector3,
-    geometry::{ Point3, Rotation3 },
-};
+use nalgebra::geometry::Point3;
+use array_tool::vec::Intersect;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq, PartialOrd)]
 struct Beacon {
     pos: Point3<i32>,
-    all_pos: Vec<Point3<i32>>,
+    all_pos: [Point3<i32>; 24],
+}
+
+impl PartialEq for Beacon {
+    fn eq(&self, other: &Self) -> bool {
+        self.pos == other.pos
+    }
 }
 
 #[derive(Default, Debug, Clone)]
@@ -18,38 +21,33 @@ struct Scanner {
 }
 
 fn main() {
-    let file = std::fs::read_to_string("input.ex.txt").unwrap();
+    let file = std::fs::read_to_string("input.txt").unwrap();
 
     let mut scanners = vec![];
     let mut lines = file.lines();
 
-    loop {
-        let line = match lines.next() {
-            Some(line) => line,
-            None => break,
+    while let Some(line) = lines.next() {
+        let mut cur_scanner = Scanner {
+            id: Regex::new(r"([a-z]|-| )").unwrap().replace_all(line, "").parse::<usize>().unwrap(),
+            ..Scanner::default()
         };
 
-        let mut cur_scanner = Scanner::default();
-        cur_scanner.id = Regex::new(r"([a-z]|-| )").unwrap().replace_all(line, "").parse::<usize>().unwrap();
-
-        while let Some(line) = lines.next() {
+        for line in &mut lines {
             if line.is_empty() {
                 for beacon in cur_scanner.beacons.iter_mut() {
-                    for (i, axis) in [&Vector3::x_axis(), &Vector3::y_axis(), &Vector3::z_axis()].iter().enumerate() {
-                        for _ in 0..2 {
-                            for j in 0..4 {
-                                let rot = Rotation3::from_axis_angle(axis, j as f32 * std::f32::consts::FRAC_PI_2);
-                                let pt = Point3::new(beacon.pos.x as f32, beacon.pos.y as f32, beacon.pos.z as f32);
-                                let new_pt = rot.transform_point(&pt);
-                                beacon.all_pos.push(Point3::new(new_pt.x.round() as i32, new_pt.y.round() as i32, new_pt.z.round() as i32));
-                            }
-
-                            match i {
-                                0 => beacon.pos.x *= -1,
-                                1 => beacon.pos.y *= -1,
-                                _ => beacon.pos.z *= -1,
-                            }
+                    let mut index = 0;
+                    let mut p = beacon.pos;
+                    for _ in 0..4 {
+                        for _ in 0..4 {
+                            beacon.all_pos[index] = p;
+                            p = Point3::new(p.z, p.y, -p.x);
+                            index += 1;
                         }
+
+                        beacon.all_pos[index] = Point3::new(p.y, -p.x, p.z);
+                        beacon.all_pos[index + 1] = Point3::new(-p.y, p.x, p.z);
+                        index += 2;
+                        p = Point3::new(p.x, p.z, -p.y);
                     }
                 }
 
@@ -57,82 +55,64 @@ fn main() {
                 break;
             }
 
-            let mut pos = line.split(",");
+            let mut pos = line.split(',');
             cur_scanner.beacons.push(Beacon {
                 pos: Point3::new(
                     pos.next().unwrap().parse::<i32>().unwrap(),
                     pos.next().unwrap().parse::<i32>().unwrap(),
                     pos.next().unwrap().parse::<i32>().unwrap(),
                 ),
-                all_pos: vec![],
+                all_pos: [Point3::new(0, 0, 0); 24],
             });
         }
     }
-    /*
-    for scanner in &scanners {
-        for beacon in &scanner.beacons {
-            for pos in &beacon.all_pos {
-                println!("{:?}", pos);
+
+    let mut scanners = scanners.clone();
+    let mut s0 = scanners.remove(0);
+    let mut origins = vec![];
+
+    while !scanners.is_empty() {
+        let sn = scanners.remove(0);
+
+        match find_common_beacons(&s0, &sn) {
+            Some((result, origin)) => {
+                origins.push(origin);
+
+                for p in &result {
+                    if !s0.beacons.contains(&Beacon { pos: *p, all_pos: [Point3::new(0, 0, 0); 24] }) {
+                        s0.beacons.push(Beacon {pos: *p, all_pos: [Point3::new(0, 0, 0); 24] });
+                    }
+                }
+            },
+            None => scanners.push(sn),
+        }
+    }
+
+    println!("Part 1: {}", s0.beacons.len());
+    println!("Part 2: {}", origins.iter().map(|o1| origins.iter().map(|o2| manhattan_distance(*o1, *o2)).max().unwrap()).max().unwrap());
+}
+
+fn find_common_beacons(s1: &Scanner, s2: &Scanner) -> Option<(Vec<Point3<i32>>, Point3<i32>)> {
+    for i in 0..24 {
+        for b1 in &s1.beacons {
+            for b2 in &s2.beacons {
+                let origin = b2.all_pos[i] - b1.pos;
+                let mut result = vec![];
+
+                for b2b in &s2.beacons {
+                    result.push(b2b.all_pos[i] - origin);
+                }
+
+                if result.intersect(s1.beacons.iter().map(|b| b.pos).collect()).len() >= 12 {
+                    return Some((result, origin.into()));
+                }
             }
         }
     }
-    */
 
-    {
-        let scanners = scanners.clone();
-        let scanner_pos = vec![Point3::<f32>::new(0.0, 0.0, 0.0); scanners.len()];
+    None
+}
 
-        for mut scanner1 in &scanners {
-            for mut scanner2 in &scanners {
-                scanner1 = &scanners[1];
-                scanner2 = &scanners[4];
-                if scanner1.id == scanner2.id {
-                    continue;
-                }
-
-                let mut scanner1_differences = HashMap::new();
-                for b1 in &scanner1.beacons {
-                    for b2 in &scanner2.beacons {
-                        for p in &b2.all_pos {
-                            if *p == b1.pos {
-                                continue;
-                            }
-
-                            let diff = b1.pos - *p;
-                            // let diff = Point3::new(diff.x.abs(), diff.y.abs(), diff.z.abs());
-                            match scanner1_differences.get_mut(&diff) {
-                                Some(count) => *count += 1,
-                                None => drop(scanner1_differences.insert(diff, 1)),
-                            };
-                        }
-                    }
-                }
-
-                /*
-                if scanner1.id == 0 && scanner2.id == 4 || scanner2.id == 0 && scanner1.id == 4 {
-                    println!("{:?}", "hello");
-                    for (p, val) in &scanner1_differences {
-                        if *val > 3 {
-                            println!("{:?} ---- {}", p, val);
-                        }
-                    }
-                    // println!("{:?}", scanner1_differences);
-                }
-                */
-
-                if let Some(max) = scanner1_differences.iter().map(|(_, val)| val).max() {
-                    if *max >= 12 {
-                        println!("intersection between {} and {}: {}", scanner1.id, scanner2.id, max);
-                        for (p, val) in &scanner1_differences {
-                            if *val >= 12 {
-                                println!("{:?}", p);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        println!("Part 1: {}", 0);
-    }
+fn manhattan_distance(p1: Point3<i32>, p2: Point3<i32>) -> i32 {
+    (p1.x - p2.x).abs() + (p1.y - p2.y).abs() + (p1.z - p2.z).abs()
 }
