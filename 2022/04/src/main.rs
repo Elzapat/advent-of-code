@@ -36,4 +36,23 @@ fn main() {
     }
 
     println!("{result}");
+    solve_with_regex();
+}
+
+fn solve_with_regex() {
+    let input = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/input.txt")).unwrap();
+    let mut result = 0;
+    let re = regex::Regex::new(r"(\d+)-(\d+),(\d+)-(\d+)").unwrap();
+
+    for line in input.lines() {
+        if let Some(captures) = re.captures(line) {
+            if captures[1].parse::<u32>().unwrap() <= captures[4].parse::<u32>().unwrap()
+                && captures[2].parse::<u32>().unwrap() >= captures[3].parse::<u32>().unwrap()
+            {
+                result += 1;
+            }
+        }
+    }
+
+    println!("{result}");
 }
