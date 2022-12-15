@@ -47,7 +47,8 @@ dependencies = [
 name = "day06"
 version = "0.1.0"
 dependencies = [
- "decoder",
+ "strum",
+ "strum_macros",
 ]
 
 [[package]]
@@ -128,14 +129,6 @@ version = "0.1.0"
 [[package]]
 name = "day25"
 version = "0.1.0"
-
-[[package]]
-name = "decoder"
-version = "0.1.0"
-dependencies = [
- "strum",
- "strum_macros",
-]
 
 [[package]]
 name = "heck"
