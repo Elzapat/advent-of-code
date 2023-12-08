@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 aoc-base = { workspace = true }
+num = "0.4"
