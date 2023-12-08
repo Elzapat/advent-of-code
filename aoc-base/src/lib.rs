@@ -1,7 +1,7 @@
 use std::{env, fs};
 
 pub fn read_input() -> String {
-    let input_file = if env::var("AOC_EXAMPLE").is_ok() {
+    let input_file = if env::var("AOC_EX").is_ok() {
         "ex.txt"
     } else {
         "input.txt"

@@ -50,7 +50,7 @@ name = "day07"
 version = "0.1.0"
 
 [[package]]
-name = "day30"
+name = "day08"
 version = "0.1.0"
 dependencies = [
  "aoc-base",
