@@ -29,58 +29,11 @@ impl Directions {
     pub fn new(dir1: Direction, dir2: Direction) -> Self {
         Directions { dir1, dir2 }
     }
-
-    pub fn is_compatible(&self, dir: Direction) -> bool {
-        (self.dir1 == Direction::North && dir == Direction::South)
-            || (self.dir1 == Direction::South && dir == Direction::North)
-            || (self.dir1 == Direction::West && dir == Direction::East)
-            || (self.dir1 == Direction::East && dir == Direction::West)
-            || (self.dir2 == Direction::East && dir == Direction::West)
-            || (self.dir2 == Direction::West && dir == Direction::East)
-            || (self.dir2 == Direction::North && dir == Direction::South)
-            || (self.dir2 == Direction::South && dir == Direction::North)
-    }
 }
 
 #[derive(Debug, Copy, Clone)]
 struct Pipe {
     dirs: Directions,
-}
-
-fn compute_outside_area(
-    pos: (i32, i32),
-    path: &[(i32, i32)],
-    area: &mut u32,
-    size: (i32, i32),
-    covered: &mut Vec<(i32, i32)>,
-) {
-    if pos.0 < 0 || pos.0 > size.0 - 1 || pos.1 < 0 || pos.1 > size.1 - 1 {
-        return;
-    }
-
-    if covered.contains(&pos) {
-        return;
-    }
-
-    covered.push(pos);
-    *area += 1;
-
-    if path.contains(&pos) {
-        return;
-    }
-
-    for (dx, dy) in [
-        (-1, 0),
-        (1, 0),
-        (0, 1),
-        (0, -1),
-        (-1, -1),
-        (1, 1),
-        (-1, 1),
-        (1, -1),
-    ] {
-        compute_outside_area((pos.0 + dx, pos.1 + dy), path, area, size, covered);
-    }
 }
 
 fn main() {
@@ -177,39 +130,15 @@ fn main() {
         path.len() / 2 + if path.len() % 2 == 0 { 0 } else { 1 }
     );
 
-    let mut outside_area = 0;
-    let mut covered = Vec::new();
-    compute_outside_area(
-        (0, 0),
-        &path,
-        &mut outside_area,
-        (pipes[0].len() as i32, pipes.len() as i32),
-        &mut covered,
-    );
+    let mut area = 0;
 
-    for i in 0..pipes.len() {
-        for j in 0..pipes[i].len() {
-            print!(
-                "{}",
-                if covered.contains(&(j as i32, i as i32)) {
-                    '.'
-                } else {
-                    '+'
-                }
-            );
-        }
-        println!();
+    for (point, next_point) in path.iter().zip(path.iter().skip(1)) {
+        // Shoelace formula
+        area += point.0 * next_point.1 - next_point.0 * point.1;
     }
 
-    println!("{outside_area}");
-    println!("{} {}", pipes_grid.len(), pipes[0].len());
-    println!("{}", pipes_grid.len() * pipes[0].len());
-    println!("{:?}", path);
+    area /= 2;
 
-    // 2237: too high
-    // 13220: too high
-    println!(
-        "Part 2: {}",
-        (pipes.len() * pipes[0].len()) as u32 - outside_area
-    );
+    // Pick's theorem
+    println!("Part 2: {}", -(area + path.len() as i32 / 2 - 1));
 }
