@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 aoc-base = { workspace = true }
 itertools = { workspace = true }
+memoize = "0.4.1"
