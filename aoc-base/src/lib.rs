@@ -7,7 +7,7 @@ pub fn read_input() -> String {
         "input.txt"
     };
 
-    fs::read_to_string(input_file).unwrap()
+    fs::read_to_string(input_file).unwrap().trim().to_string()
 }
 
 pub fn read_input_grid() -> Vec<Vec<char>> {
