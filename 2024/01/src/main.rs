@@ -33,5 +33,5 @@ fn main() {
     }
 
     println!("Part 1: {sum}");
-    println!("Part 1: {sump2}");
+    println!("Part 2: {sump2}");
 }
