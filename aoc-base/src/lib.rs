@@ -16,3 +16,32 @@ pub fn read_input_grid() -> Vec<Vec<char>> {
         .map(|l| l.chars().collect::<Vec<char>>())
         .collect::<Vec<Vec<char>>>()
 }
+
+pub fn read_input_grid_char() -> Vec<Vec<char>> {
+    read_input()
+        .lines()
+        .map(|l| l.chars().collect::<Vec<char>>())
+        .collect::<Vec<Vec<char>>>()
+}
+
+pub fn read_input_grid_i64() -> Vec<Vec<i64>> {
+    read_input()
+        .lines()
+        .map(|l| {
+            l.chars()
+                .map(|c| c.to_digit(10).unwrap() as i64)
+                .collect::<Vec<i64>>()
+        })
+        .collect::<Vec<Vec<i64>>>()
+}
+
+pub fn read_input_grid_u64() -> Vec<Vec<u64>> {
+    read_input()
+        .lines()
+        .map(|l| {
+            l.chars()
+                .map(|c| c.to_digit(10).unwrap() as u64)
+                .collect::<Vec<u64>>()
+        })
+        .collect::<Vec<Vec<u64>>>()
+}
