@@ -5,8 +5,8 @@ fn main() {
 
     let mut result_p1 = 0;
     let mut result_p2 = 0;
-
     let mut enabled = true;
+
     for line in input.lines() {
         let re = Regex::new(r"(mul\((\d+),(\d+)\)|do\(\)|don't\(\))").unwrap();
 
