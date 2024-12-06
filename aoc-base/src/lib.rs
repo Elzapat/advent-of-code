@@ -45,3 +45,10 @@ pub fn read_input_grid_u64() -> Vec<Vec<u64>> {
         })
         .collect::<Vec<Vec<u64>>>()
 }
+
+pub fn read_input_grid_bool(char_true: char) -> Vec<Vec<bool>> {
+    read_input()
+        .lines()
+        .map(|l| l.chars().map(|c| c == char_true).collect::<Vec<bool>>())
+        .collect::<Vec<Vec<bool>>>()
+}
