@@ -1,0 +1,18 @@
+use itertools::Itertools;
+
+fn main() {
+    let containers = aoc_base::read_input()
+        .lines()
+        .map(|l| l.parse::<u32>().unwrap())
+        .collect::<Vec<u32>>();
+
+    println!(
+        "{:?}",
+        containers
+            .iter()
+            .permutations(containers.len())
+            .unique()
+            .collect::<Vec<Vec<&u32>>>()
+    );
+    println!("{containers:#?}");
+}
