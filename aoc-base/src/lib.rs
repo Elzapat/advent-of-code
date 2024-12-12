@@ -52,3 +52,72 @@ pub fn read_input_grid_bool(char_true: char) -> Vec<Vec<bool>> {
         .map(|l| l.chars().map(|c| c == char_true).collect::<Vec<bool>>())
         .collect::<Vec<Vec<bool>>>()
 }
+
+#[derive(Copy, Clone, Default, PartialEq, Eq, Hash)]
+pub struct Point {
+    r: usize,
+    c: usize,
+}
+
+impl Point {
+    pub fn new(r: usize, c: usize) -> Point {
+        Point { r, c }
+    }
+
+    pub fn get_4_neighbours(&self, r_bound: usize, c_bound: usize) -> Vec<Point> {
+        let mut n = vec![];
+
+        for (dr, dc) in [(0, 1), (1, 0), (-1, 0), (0, -1)] {
+            if dr == 0 && dc == 0 {
+                continue;
+            }
+
+            if self.r as isize + dr >= 0
+                && self.c as isize + dc >= 0
+                && self.r as isize + dr < r_bound as isize
+                && self.c as isize + dc < c_bound as isize
+            {
+                n.push(Point::new(
+                    (self.r as isize + dr) as usize,
+                    (self.c as isize + dc) as usize,
+                ));
+            }
+        }
+
+        n
+    }
+
+    pub fn get_8_neighbours(&self, r_bound: usize, c_bound: usize) -> Vec<Point> {
+        let mut n = vec![];
+
+        for dr in -1..=1 {
+            for dc in -1..=1 {
+                if dr == 0 && dc == 0 {
+                    continue;
+                }
+
+                if self.r as isize + dr >= 0
+                    && self.c as isize + dc >= 0
+                    && self.r as isize + dr < r_bound as isize
+                    && self.c as isize + dc < c_bound as isize
+                {
+                    n.push(Point::new(
+                        (self.r as isize + dr) as usize,
+                        (self.c as isize + dc) as usize,
+                    ));
+                }
+            }
+        }
+
+        n
+    }
+
+    pub fn manhattan_distance(&self, other: &Point) -> usize {
+        ((self.r as isize - other.r as isize).abs() + (self.c as isize - other.c as isize).abs())
+            as usize
+    }
+
+    pub fn distnace(&self, other: &Point) -> f32 {
+        ((self.r as f32 - other.r as f32).powi(2) + (self.c as f32 - other.c as f32).powi(2)).sqrt()
+    }
+}
