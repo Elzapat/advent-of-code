@@ -55,8 +55,8 @@ pub fn read_input_grid_bool(char_true: char) -> Vec<Vec<bool>> {
 
 #[derive(Copy, Clone, Default, PartialEq, Eq, Hash)]
 pub struct Point {
-    r: usize,
-    c: usize,
+    pub r: usize,
+    pub c: usize,
 }
 
 impl Point {
