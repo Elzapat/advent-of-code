@@ -1,10 +1,6 @@
 fn main() {
     let ra = 65804993_u64;
 
-    // let program = "0,3,5,4,3,0"
-    //     .split(",")
-    //     .map(|n| n.parse::<u64>().unwrap())
-    //     .collect::<Vec<u64>>();
     let program = "2,4,1,1,7,5,1,4,0,3,4,5,5,5,3,0"
         .split(",")
         .map(|n| n.parse::<u64>().unwrap())
@@ -18,37 +14,21 @@ fn main() {
             .collect::<Vec<String>>()
             .join(",")
     );
-    println!("{}", program.len());
 
-    // let mut ra = 202990501500000;
-    // loop {
-    //     let output = run_program(&program, ra);
-    //     println!("{ra} {output:?}");
-    //     ra += 1;
-    // }
+    // This initial value was found by trial and error starting from when the program
+    // outputs 16 values, the same length as the program.
+    // Since the digit have a cycle and increment like a number, I started by searching a
+    // number where the last digit was right, then increased a bit to get the 15th number right
+    // and so on until I found the right input to get the program in the output
+    let mut ra = 202322936856672;
 
-    let mut handles = vec![];
-    for i in 0..8 {
-        let program = program.clone();
-        handles.push(std::thread::spawn(move || {
-            // let mut ra = 202943592500000 + i;
-            // let mut ra = 202943559631645 + i;
-            let mut ra = 201988959631645 + i;
-            loop {
-                println!("{:?}", run_program(&program, ra));
-                if program == run_program(&program, ra) {
-                    // 202943559641642
-                    println!("Part 2: {ra}");
-                    break;
-                }
+    loop {
+        if program == run_program(&program, ra) {
+            println!("Part 2: {ra}");
+            break;
+        }
 
-                ra += 8;
-            }
-        }));
-    }
-
-    for handle in handles {
-        handle.join().unwrap();
+        ra += 1;
     }
 }
 
