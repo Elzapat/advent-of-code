@@ -68,6 +68,30 @@ impl Point {
         let mut n = vec![];
 
         for (dr, dc) in [(0, 1), (1, 0), (-1, 0), (0, -1)] {
+            if self.r as isize + dr >= 0
+                && self.c as isize + dc >= 0
+                && self.r as isize + dr < r_bound as isize
+                && self.c as isize + dc < c_bound as isize
+            {
+                n.push(Point::new(
+                    (self.r as isize + dr) as usize,
+                    (self.c as isize + dc) as usize,
+                ));
+            }
+        }
+
+        n
+    }
+
+    pub fn get_4_neighbours_with_directions(
+        &self,
+        r_bound: usize,
+        c_bound: usize,
+        neighbours: Vec<(isize, isize)>,
+    ) -> Vec<Point> {
+        let mut n = vec![];
+
+        for (dr, dc) in neighbours {
             if dr == 0 && dc == 0 {
                 continue;
             }

@@ -1,0 +1,10 @@
+[package]
+name = "day21"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+aoc-base = { version = "0.1.0", path = "../../aoc-base" }
+lazy_static = "1.5.0"
+memoize = "0.4.2"
+pathfinding = "4.12.0"
