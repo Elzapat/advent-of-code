@@ -141,7 +141,7 @@ impl Point {
             as usize
     }
 
-    pub fn distnace(&self, other: &Point) -> f32 {
+    pub fn distance(&self, other: &Point) -> f32 {
         ((self.r as f32 - other.r as f32).powi(2) + (self.c as f32 - other.c as f32).powi(2)).sqrt()
     }
 }
