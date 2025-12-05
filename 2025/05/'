@@ -1,0 +1,141 @@
+fn main() {
+    let input = aoc_base::read_input();
+    //     let input = "3-5
+    // 10-14
+    // 16-20
+    // 12-18
+    //
+    // 1
+    // 5
+    // 8
+    // 11
+    // 17
+    // 32";
+
+    let mut processing_ranges = true;
+    let mut ranges: Vec<(u64, u64)> = vec![];
+    let mut result_p1 = 0;
+    //let mut result_p2 = HashSet::<u64>::new();
+    let mut result_p2 = 0_u64;
+    let mut result_p2_2 = 0_u64;
+
+    'main: for line in input.lines() {
+        if line.is_empty() {
+            processing_ranges = false;
+
+            // for range in &ranges {
+            //     for id in range.0..=range.1 {
+            //         result_p2.insert(id);
+            //     }
+            // }
+            //
+
+            println!("{ranges:?}");
+            println!("{ranges:?}");
+
+            // println!("{ranges:?}");
+            while overlaps(&ranges) {
+                // for range in ranges.clone().iter() {
+                //     ranges.retain(|r| r.0 <= range.0 || r.1 > range.1);
+                //     ranges.retain(|r| r.0 < range.0 || r.1 >= range.1);
+                // }
+
+                'ranges1: for r1 in ranges.clone().iter() {
+                    for r2 in &mut ranges {
+                        if r1 == r2
+                            || (r1.0 >= r2.0 && r1.1 <= r2.1)
+                            || (r2.0 >= r1.0 && r2.1 <= r1.1)
+                        {
+                            continue;
+                        }
+                        // println!("{r1:?} {r2:?}");
+
+                        if r1.1 >= r2.0 && r1.0 < r2.1 && r1.1 <= r2.1 {
+                            r2.0 = r1.1 + 1;
+                            break 'ranges1;
+                        } else if r1.0 <= r2.1 && r1.1 > r2.0 {
+                            r2.1 = r1.0 - 1;
+                            break 'ranges1;
+                        }
+
+                        // println!("{r1:?} {r2:?}");
+                    }
+                    //
+                    // for range in ranges.clone().iter() {
+                    //     ranges.retain(|r| r.0 <= range.0 || r.1 >= range.1);
+                    // }
+                }
+                ranges.dedup();
+                // println!("{ranges:?}");
+            }
+
+            for range in &ranges {
+                // println!("{range:?}");
+                result_p2 += range.1 - range.0 + 1;
+            }
+
+            // let mut max = 0;
+            // let mut min = 0;
+            // for range in &ranges {
+            //     if range.0 < min {
+            //         min = range.0;
+            //     }
+            //
+            //     if range.1 > max {
+            //         max = range.1;
+            //     }
+            // }
+            //
+            // 'numbers: for n in min..=max {
+            //     if n % 10000000 == 0 {
+            //         println!("{n}/{max}");
+            //     }
+            //     for range in &ranges {
+            //         if n >= range.0 && n <= range.1 {
+            //             result_p2_2 += 1;
+            //             continue 'numbers;
+            //         }
+            //     }
+            // }
+
+            continue;
+        }
+
+        if processing_ranges {
+            let mut parts = line.split('-');
+            ranges.push((
+                parts.next().unwrap().parse::<u64>().unwrap(),
+                parts.next().unwrap().parse::<u64>().unwrap(),
+            ));
+            continue;
+        }
+
+        let id = line.parse::<u64>().unwrap();
+        for range in &ranges {
+            if id >= range.0 && id <= range.1 {
+                result_p1 += 1;
+                continue 'main;
+            }
+        }
+    }
+
+    println!("Part 1: {result_p1}");
+    // 18343256845457055221, 18343256845457055961, 376735498292748, 376378702860021
+    println!("Part 2: {}", result_p2);
+}
+
+fn overlaps(ranges: &[(u64, u64)]) -> bool {
+    for (i, r1) in ranges.iter().enumerate() {
+        for (j, r2) in ranges.iter().enumerate() {
+            if r1 == r2 {
+                continue;
+            }
+            if r1.0 <= r2.1 && r2.0 <= r1.1 {
+                println!("{i} {j} {r1:?} {r2:?}");
+                return true;
+            }
+        }
+    }
+
+    false
+}
