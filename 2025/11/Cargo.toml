@@ -1,0 +1,8 @@
+[package]
+name = "day11"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+aoc-base = { path = "../../aoc-base" }
+memoize = "0.5.1"
